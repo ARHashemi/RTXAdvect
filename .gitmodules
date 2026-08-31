@@ -1,0 +1,4 @@
+[submodule "owl"]
+	path = owl
+	url = https://github.com/NVIDIA/OWL.git
+	branch = main
