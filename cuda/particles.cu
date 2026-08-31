@@ -37,7 +37,7 @@ namespace advect {
     // are initialized to x.
     template <typename T>
     struct minmax_unary_op
-        : public thrust::unary_function< T, minmax_pair<T> >
+
     {
         __host__ __device__
             minmax_pair<T> operator()(const T& x) const
@@ -55,14 +55,14 @@ namespace advect {
     // the minimums and maximums of the input pairs
     template <typename T>
     struct minmax_binary_op
-        : public thrust::binary_function< minmax_pair<T>, minmax_pair<T>, minmax_pair<T> >
+
     {
         __host__ __device__
             minmax_pair<T> operator()(const minmax_pair<T>& x, const minmax_pair<T>& y) const
         {
             minmax_pair<T> result;
-            result.min_val = thrust::min(x.min_val, y.min_val);
-            result.max_val = thrust::max(x.max_val, y.max_val);
+            result.min_val = std::min(x.min_val, y.min_val);
+            result.max_val = std::max(x.max_val, y.max_val);
             return result;
         }
     };
@@ -109,7 +109,7 @@ namespace advect {
     }
 
     //[Host] Find the number of particles in file
-    int advect::loadNumParticles(std::string fileName)
+    int loadNumParticles(std::string fileName)
     {
         int numParticles = 0;
         std::string word;
@@ -125,7 +125,7 @@ namespace advect {
     }
 
     //[Host] Init particles (pos and vel) from file
-    void advect::cudaInitParticles(Particle* d_particles, int N, std::string fileName)
+    void cudaInitParticles(Particle* d_particles, int N, std::string fileName)
     {
         //Read particles
         std::string word;
@@ -204,7 +204,7 @@ namespace advect {
 
    
     //[Host] Estimate stable step size based on local element size
-    double advect::cudaEvalTimestep(int NumTets,
+    double cudaEvalTimestep(int NumTets,
         vec4i* d_tetIndices, 
         vec3d* d_vertexPositions, 
         vec3d* d_Velocities, std::string mode)
@@ -496,7 +496,7 @@ namespace advect {
         //    printf("(%lf,%lf,%lf) Vel=(%lf,%lf,%lf)\n", p.x, p.y, p.z, vel.x, vel.y, vel.z);
     }
 
-    void advect::cudaTubeAdvect(Particle* d_particles, int* d_tetIDs,
+    void cudaTubeAdvect(Particle* d_particles, int* d_tetIDs,
         vec4d* d_vels, vec4d* d_disp, double dt, int numParticles)
     {
         double L = 30;//cm
@@ -522,6 +522,7 @@ namespace advect {
     //----------------------Brownian motion--------------------
 #include <thrust/execution_policy.h>
 
+#include <algorithm>
     struct InitCURAND
     {
         unsigned long long seed;
@@ -539,7 +540,7 @@ namespace advect {
         }
     };
 
-    void advect::initRandomGenerator(int numParticles, curandState_t* rand_states){
+    void initRandomGenerator(int numParticles, curandState_t* rand_states){
         //Each particle has its own random generator for each thread
         long int rng_seed = time(NULL);
         rng_seed = 1591593751;
@@ -575,7 +576,7 @@ namespace advect {
         //    randXi0, randXi1, randXi2,randDisp);
     }
 
-    void advect::cudaBrownianMotion(Particle* d_particles, 
+    void cudaBrownianMotion(Particle* d_particles, 
         vec4d* d_disp, 
         curandState_t* states,
         double dt, 
@@ -644,7 +645,7 @@ namespace advect {
 
     //[Host] Move particles x1 = x0 + vel*dt and do specular reflection if hit the wall
     // d_tetIDs used to determine the status of a particle
-    void advect::cudaMoveParticles(Particle* d_particles, vec4d* d_vels, double dt,
+    void cudaMoveParticles(Particle* d_particles, vec4d* d_vels, double dt,
         int numParticles, int* d_tetIDs){
 
         int blockDims = 128;
@@ -703,7 +704,7 @@ namespace advect {
         //disp.w = 0.0;
     }
 
-    void advect::cudaMoveParticles(Particle* d_particles, vec4d* d_disps,
+    void cudaMoveParticles(Particle* d_particles, vec4d* d_disps,
         int numParticles, int* d_tetIDs) {
 
         int blockDims = 128;
@@ -732,7 +733,7 @@ namespace advect {
     }
 
     //[Host] Check particle status based on tetID
-    void advect::cudaReportParticles(int numParticles, int* d_tetIDs) {
+    void cudaReportParticles(int numParticles, int* d_tetIDs) {
         thrust::device_ptr<int> dev_ptr = thrust::device_pointer_cast(d_tetIDs);
 
         int blockDims = 128;

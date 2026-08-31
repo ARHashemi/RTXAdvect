@@ -1,61 +1,42 @@
 # ======================================================================== #
 # Copyright 2019-2020 The Collaborators                                    #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#     http://www.apache.org/licenses/LICENSE-2.0                           #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
+# Ported to CUDA 13.x + OptiX 9.x + NVIDIA/OWL by JAXTrace revision team,  #
+# 2026-08-28.                                                              #
+# Licensed under the Apache License, Version 2.0 (see LICENSE).            #
 # ======================================================================== #
 
-cmake_policy(SET CMP0048 NEW)
-project(Optix VERSION 0.0.1)
+cmake_minimum_required(VERSION 3.24)
+project(RTXAdvect VERSION 0.0.2 LANGUAGES C CXX CUDA)
 
-cmake_minimum_required(VERSION 2.8)
-
-# ------------------------------------------------------------------
-# first, include gdt project to do some general configuration stuff
-# (build modes, glut, optix, etc)
-# ------------------------------------------------------------------
-set(owl_dir ${PROJECT_SOURCE_DIR}/owl/)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/common/cmake/")
-include(configure_owl)
-
-#set CUDA_HOST_COMPILER C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.26.28801/bin/Hostx64/x64/cl.exe
-
-set(CompilerFlags
-        CMAKE_CXX_FLAGS
-        CMAKE_CXX_FLAGS_DEBUG
-        CMAKE_CXX_FLAGS_RELEASE
-        CMAKE_C_FLAGS
-        CMAKE_C_FLAGS_DEBUG
-        CMAKE_C_FLAGS_RELEASE
-        )
-foreach(CompilerFlag ${CompilerFlags})
-  string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-endforeach()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ------------------------------------------------------------------
-# import owl: 
+# NVIDIA/OWL as a subproject.  New OWL exports targets `owl::owl`
+# and provides the `embed_ptx` CMake function via its cmake/ dir.
 # ------------------------------------------------------------------
-include_directories(${OWL_INCLUDES})
+set(owl_dir ${PROJECT_SOURCE_DIR}/owl)
 add_subdirectory(${owl_dir} EXCLUDE_FROM_ALL)
 
-# -------------------------------------------------------
-# the project itself
-# -------------------------------------------------------
+# embed_ptx() lives in owl/owl/cmake/embed_ptx.cmake; add_subdirectory
+# above should already have brought it into scope, but include the
+# module path explicitly for clarity.
+list(APPEND CMAKE_MODULE_PATH "${owl_dir}/owl/cmake")
+include(embed_ptx)
 
-include_directories(${PROJECT_SOURCE_DIR})
-
-cuda_compile_and_embed(ptxCode
-  optix/optixQueryKernel.cu
+# ------------------------------------------------------------------
+# OptixTetQueries library
+# ------------------------------------------------------------------
+embed_ptx(
+  OUTPUT_TARGET
+    optixQueryKernel_ptx
+  PTX_LINK_LIBRARIES
+    owl::owl
+  EMBEDDED_SYMBOL_NAMES
+    ptxCode
+  SOURCES
+    optix/optixQueryKernel.cu
 )
 
 add_library(optixTetQueries STATIC
@@ -63,13 +44,18 @@ add_library(optixTetQueries STATIC
   optix/OptixQuery.h
   optix/OptixTetQuery.cpp
   optix/OptixTriQuery.cpp
-  ${ptxCode}
-  )
+)
+target_include_directories(optixTetQueries PUBLIC ${PROJECT_SOURCE_DIR})
 target_link_libraries(optixTetQueries
-  ${OWL_LIBRARIES}
-  )
+  PUBLIC
+    owl::owl
+    optixQueryKernel_ptx
+)
 
-cuda_add_executable(cudaParticleAdvection
+# ------------------------------------------------------------------
+# The main executable
+# ------------------------------------------------------------------
+add_executable(cudaParticleAdvection
   cuda/common.h
   cuda/utils.cpp
   cuda/particles.cu
@@ -80,11 +66,33 @@ cuda_add_executable(cudaParticleAdvection
   query/RTQuery.h
   query/RTQuery.cu
   cuda/cudaParticleAdvection.cu
-  )
-
+)
+target_include_directories(cudaParticleAdvection PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(cudaParticleAdvection
-  optixTetQueries
-  )
+  PRIVATE
+    optixTetQueries
+    owl::owl
+)
 
+# RTX 5090 = Blackwell / sm_120 is picked up by CMAKE_CUDA_ARCHITECTURES
+# passed on the command line; OWL sets sensible defaults if unset.
 
+message(STATUS "RTXAdvect ported to NVIDIA/OWL + OptiX 9.x + CUDA 13.x")
 
+# double4-deprecated shim — CUDA 13 renamed double4 to double4_16a /
+# double4_32a but kept the original as a deprecated alias.  Silence the
+# warning here rather than patching every function signature that
+# transitively takes double4.
+target_compile_options(optixTetQueries      PRIVATE -Wno-deprecated-declarations)
+target_compile_options(cudaParticleAdvection PRIVATE -Wno-deprecated-declarations)
+
+# nvcc 13 promotes some warnings; relax constexpr host->device calls
+# (std::min/std::max on the device side) and silence printf format
+# checks (there are a few benign %d vs long int mismatches in the
+# original code).
+target_compile_options(optixTetQueries       PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wno-format>)
+target_compile_options(cudaParticleAdvection PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wno-format>)

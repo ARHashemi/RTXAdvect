@@ -262,7 +262,7 @@ namespace advect {
 			   { /* sentinel */ nullptr },
 		};
 
-		launchParams = owlLaunchParamsCreate(owl,
+		launchParams = owlParamsCreate(owl,
 			sizeof(LaunchParams),
 			lpVars, -1);
 	}
@@ -279,12 +279,12 @@ namespace advect {
 		int launchWidth = 64 * 1024;
 		int launchHeight = divRoundUp(numParticles, launchWidth);
 
-		owlLaunchParamsSet1ul(launchParams, "particles", (uint64_t)d_particles);
-		owlLaunchParamsSet1i(launchParams, "numParticles", numParticles);
-		owlLaunchParamsSet1i(launchParams, "isFloat", 1);
-		owlLaunchParamsSet1ul(launchParams, "out_tetIDs", (uint64_t)out_tetIDs);
-		owlLaunchParamsSet1i(launchParams, "isDisp", 0);
-		owlParamsLaunch2D(rayGen, launchWidth, launchHeight, launchParams);
+		owlParamsSet1ul(launchParams, "particles", (uint64_t)d_particles);
+		owlParamsSet1i(launchParams, "numParticles", numParticles);
+		owlParamsSet1i(launchParams, "isFloat", 1);
+		owlParamsSet1ul(launchParams, "out_tetIDs", (uint64_t)out_tetIDs);
+		owlParamsSet1i(launchParams, "isDisp", 0);
+		owlLaunch2D(rayGen, launchWidth, launchHeight, launchParams);
 		cudaDeviceSynchronize();
 	}
 
@@ -296,12 +296,12 @@ namespace advect {
 		int launchWidth = 64 * 1024;
 		int launchHeight = divRoundUp(numParticles, launchWidth);
 
-		owlLaunchParamsSet1ul(launchParams, "particles", (uint64_t)d_particles);
-		owlLaunchParamsSet1i(launchParams, "numParticles", numParticles);
-		owlLaunchParamsSet1i(launchParams, "isFloat", 0);
-		owlLaunchParamsSet1ul(launchParams, "out_tetIDs", (uint64_t)out_tetIDs);
-		owlLaunchParamsSet1i(launchParams, "isDisp", 0);
-		owlParamsLaunch2D(rayGen, launchWidth, launchHeight, launchParams);
+		owlParamsSet1ul(launchParams, "particles", (uint64_t)d_particles);
+		owlParamsSet1i(launchParams, "numParticles", numParticles);
+		owlParamsSet1i(launchParams, "isFloat", 0);
+		owlParamsSet1ul(launchParams, "out_tetIDs", (uint64_t)out_tetIDs);
+		owlParamsSet1i(launchParams, "isDisp", 0);
+		owlLaunch2D(rayGen, launchWidth, launchHeight, launchParams);
 		cudaDeviceSynchronize();
 	}
 
@@ -313,14 +313,14 @@ namespace advect {
 		int launchWidth = 64 * 1024;
 		int launchHeight = divRoundUp(numParticles, launchWidth);
 
-		owlLaunchParamsSet1ul(launchParams, "particles", (uint64_t)d_particles);
-		owlLaunchParamsSet1i(launchParams, "numParticles", numParticles);
-		owlLaunchParamsSet1i(launchParams, "isFloat", 0);
-		owlLaunchParamsSet1ul(launchParams, "out_tetIDs", (uint64_t)out_tetIDs);
-		owlLaunchParamsSet1i(launchParams, "isDisp", 1);
-		owlLaunchParamsSet1ul(launchParams, "disps", (uint64_t)d_disps);
+		owlParamsSet1ul(launchParams, "particles", (uint64_t)d_particles);
+		owlParamsSet1i(launchParams, "numParticles", numParticles);
+		owlParamsSet1i(launchParams, "isFloat", 0);
+		owlParamsSet1ul(launchParams, "out_tetIDs", (uint64_t)out_tetIDs);
+		owlParamsSet1i(launchParams, "isDisp", 1);
+		owlParamsSet1ul(launchParams, "disps", (uint64_t)d_disps);
 
-		owlParamsLaunch2D(rayGen, launchWidth, launchHeight, launchParams);
+		owlLaunch2D(rayGen, launchWidth, launchHeight, launchParams);
 		cudaDeviceSynchronize();
 	}
 

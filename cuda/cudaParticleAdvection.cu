@@ -63,8 +63,12 @@ namespace advect {
 	bool saveStreamlinetoFile = false;
 	int saveInterval = numSteps;
 	//int saveInterval = 50000;
+} // namespace advect (moved main() outside)
 
-  extern "C" int main(int ac, char **av)
+using namespace advect;
+
+
+  int main(int ac, char **av)
   {
     //cudaTimer timer;
 	CPUTimer timer;
@@ -105,6 +109,9 @@ namespace advect {
 		  for (int si = 0; si < 6; ++si)
 			  SeedingBox[si] = std::atof(av[++i]);
 		  usingSeedingBox = true;
+	  }
+	  else if (arg == "--input-particles") {
+		  seeding_pts_filename = av[++i];
 	  }
 	  else if (arg == "--save-streamline-to-obj") {
 		  objTrajectoryFileName = av[++i];
@@ -243,7 +250,7 @@ namespace advect {
 	double seedBox[6] = { 73.9 + tol,-0.4 + tol,-655.95 + tol, 77.7 - tol,0.0 - tol,-655.45 - tol }; //Microfludics
 	//double seedBox[6] = { 6.5 + tol,6.5 + tol,-20 + tol, 91.5 - tol, 91.5 - tol,-16 - tol };//Sphere packing
 	//double seedBox[6] = { 167.25 + tol,178.9 + tol,-63.4 + tol, 176.75 - tol, 188.7 - tol,-58.6 - tol };//Human lung
-	std::copy(seedBox, seedBox+6, SeedingBox);
+	// std::copy(seedBox, seedBox+6, SeedingBox);
 
 
     // initialize with random particles
@@ -316,7 +323,7 @@ namespace advect {
 	//testNStracing(tetQueryAccelerator, devMesh);
 #endif
 
-	system("pause");
+	/* removed system("pause") — Windows-only */
 
 	//VelocityInterpMethod = "ConstantVelocity";
 	//VelocityInterpMethod = "VertexVelocity";
@@ -472,12 +479,12 @@ namespace advect {
 	double totalTime = BVHTime + advectionTime + diffusionTime + queryTime + reflectTime + moveTime;
 	printf("IO is not included to compute time fraction\n");
 	printf("\tItem\ttime(s)\tfraction(%%)\n");
-	printf("\tBVH init\t%.2f\t\%.2f\n", BVHTime / 1000, BVHTime / totalTime * 100);
-	printf("\tAdv\t%.2f\t\%.2f\n", advectionTime/1000, advectionTime / totalTime * 100);
-	printf("\tDfs\t%.2f\t\%.2f\n", diffusionTime / 1000, diffusionTime / totalTime * 100);
-	printf("\tQry\t%.2f\t\%.2f\n", queryTime / 1000, queryTime / totalTime * 100);
-	printf("\tRft\t%.2f\t\%.2f\n", reflectTime / 1000, reflectTime / totalTime * 100);
-	printf("\tMov\t%.2f\t\%.2f\n", moveTime / 1000, moveTime / totalTime * 100);
+	printf("\tBVH init\t%.2f\t%.2f\n", BVHTime / 1000, BVHTime / totalTime * 100);
+	printf("\tAdv\t%.2f\t%.2f\n", advectionTime/1000, advectionTime / totalTime * 100);
+	printf("\tDfs\t%.2f\t%.2f\n", diffusionTime / 1000, diffusionTime / totalTime * 100);
+	printf("\tQry\t%.2f\t%.2f\n", queryTime / 1000, queryTime / totalTime * 100);
+	printf("\tRft\t%.2f\t%.2f\n", reflectTime / 1000, reflectTime / totalTime * 100);
+	printf("\tMov\t%.2f\t%.2f\n", moveTime / 1000, moveTime / totalTime * 100);
 	printf("\tIO\t%.2f\n", IOTime / 1000);
 	printf("\tTotal Time = %.2f ms\n", totalTime);
 	printf("\tPerformance = %f steps/secs\n", numSteps / (totalTime-BVHTime) * 1000);
@@ -493,5 +500,3 @@ namespace advect {
 
     return 0;
   }
-
-}

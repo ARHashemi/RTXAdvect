@@ -191,9 +191,9 @@ namespace advect {
 
 		//Custom type hint
 		//"dt", OWL_USER_TYPE(double), OWL_OFFSETOF(LaunchParams_BD, dt)
-		//owlLaunchParamsSetRaw(launchParams_BD, "dt", dt)
+		//owlParamsSetRaw(launchParams_BD, "dt", dt)
 
-		launchParams_BD = owlLaunchParamsCreate(owl,
+		launchParams_BD = owlParamsCreate(owl,
 			sizeof(LaunchParams_BD),
 			lpVars, -1);
 	}
@@ -207,13 +207,13 @@ namespace advect {
 		int launchWidth = 64 * 1024;
 		int launchHeight = divRoundUp(numParticles, launchWidth);
 
-		owlLaunchParamsSet1ul(launchParams_BD, "particles", (uint64_t)d_particles);
-		owlLaunchParamsSet1i(launchParams_BD, "numParticles", numParticles);
-		owlLaunchParamsSet1i(launchParams_BD, "isFloat", 0);
-		owlLaunchParamsSet1ul(launchParams_BD, "out_triIDs", (uint64_t)out_triIDs);
-		owlLaunchParamsSet1ul(launchParams_BD, "disps", (uint64_t)d_disps);
+		owlParamsSet1ul(launchParams_BD, "particles", (uint64_t)d_particles);
+		owlParamsSet1i(launchParams_BD, "numParticles", numParticles);
+		owlParamsSet1i(launchParams_BD, "isFloat", 0);
+		owlParamsSet1ul(launchParams_BD, "out_triIDs", (uint64_t)out_triIDs);
+		owlParamsSet1ul(launchParams_BD, "disps", (uint64_t)d_disps);
 		
-		owlParamsLaunch2D(rayGen_BD, launchWidth, launchHeight, launchParams_BD);
+		owlLaunch2D(rayGen_BD, launchWidth, launchHeight, launchParams_BD);
 		cudaCheck(cudaDeviceSynchronize());
 	}
 
