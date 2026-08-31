@@ -415,7 +415,7 @@ namespace advect {
         printf("TetID orig %d\n", tetID);
     }
 
-    void advect::testRT(OptixQuery& cellLocator, DeviceTetMesh devMesh)
+    void testRT(OptixQuery& cellLocator, DeviceTetMesh devMesh)
     {
         int numParticles = 1;
         int blockDims = 128;

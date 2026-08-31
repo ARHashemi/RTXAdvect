@@ -435,7 +435,7 @@ namespace advect {
         d_tetIDs[particleID] = tetID_next;
     }
 
-    void advect::convexWallReflect(DeviceTetMesh d_mesh, int* d_tetIDs,
+    void convexWallReflect(DeviceTetMesh d_mesh, int* d_tetIDs,
         Particle* d_particles, vec4d* d_vels, vec4d* d_disps, int numParticles)
     {
         int blockDims = 128;
@@ -495,7 +495,7 @@ namespace advect {
         printf("TetID orig %d\n", tetID);
     }
 
-    void advect::testNStracing(OptixQuery& cellLocator, DeviceTetMesh devMesh)
+    void testNStracing(OptixQuery& cellLocator, DeviceTetMesh devMesh)
     {
         int numParticles = 1;
         int blockDims = 128;

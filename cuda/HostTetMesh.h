@@ -85,7 +85,7 @@ namespace advect {
 	  model.worldBounds.extend(p1);
 	  vec3d center =model.worldBounds.center();
 
-	  assert(nx >= 1 && ny >= 1 && nz >= 1,"BoxMesh: number of vertices must be at least 1 in each dimension");
+	  assert((nx >= 1 && ny >= 1 && nz >= 1) && "BoxMesh: number of vertices must be at least 1 in each dimension");
 
 	  // Create vertices
 	  std::vector<double> x(3);

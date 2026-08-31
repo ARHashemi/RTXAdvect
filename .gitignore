@@ -36,3 +36,7 @@ Session.vim
 !*png/*.pdf
 .vs/
 
+
+# Local pre-port backups of Wang's original files
+*.orig-2020
+*.orig-2020/

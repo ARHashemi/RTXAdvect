@@ -20,10 +20,10 @@
 #include <stdio.h>
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
-
-
+#endif
+#include <chrono>
 #define cudaCheck(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
 {
@@ -83,35 +83,32 @@ public:
 
 class CPUTimer
 {
-
 private:
-	LARGE_INTEGER tFreq, tStart, tEnd;
+    std::chrono::high_resolution_clock::time_point tStart;
+    std::chrono::high_resolution_clock::time_point tEnd;
 
 public:
-	CPUTimer(void)
-	{
-		QueryPerformanceFrequency(&tFreq);
-		return;
-	}
+    CPUTimer(void) {}
 
-	void start(void)
-	{
-		QueryPerformanceCounter(&tStart);
-	}
+    void start(void)
+    {
+        tStart = std::chrono::high_resolution_clock::now();
+    }
 
-	double stop(void)
-	{
-		QueryPerformanceCounter(&tEnd);
-		return this->TimeInSeconds() * 1000.0;
-	}
+    double stop(void)
+    {
+        tEnd = std::chrono::high_resolution_clock::now();
+        return this->TimeInSeconds() * 1000.0;
+    }
 
-	long TimeInTicks(void)
-	{
-		return((long)(tEnd.QuadPart - tStart.QuadPart));
-	}
+    long TimeInTicks(void)
+    {
+        return static_cast<long>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(tEnd - tStart).count());
+    }
 
-	double TimeInSeconds(void)
-	{
-		return ((double)(tEnd.QuadPart - tStart.QuadPart) / (tFreq.QuadPart));
-	}
+    double TimeInSeconds(void)
+    {
+        return std::chrono::duration<double>(tEnd - tStart).count();
+    }
 };
